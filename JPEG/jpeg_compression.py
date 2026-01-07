@@ -23,8 +23,8 @@ Cr = np.clip(0.5*R - 0.4187*G - 0.0813*B + 128, 0, 255).astype(np.uint8)
 h_even = h - (h % 2)
 w_even = w - (w % 2)
 
-Cb_copy = Cb.copy()
-Cr_copy = Cr.copy()
+Cb_subsampled = Cb.copy()
+Cr_subsampled = Cr.copy()
 
 
 for i in range(0, h_even, 2):
@@ -36,16 +36,16 @@ for i in range(0, h_even, 2):
                   int(Cr[i, j+1]) + int(Cr[i+1, j+1])) / 4.0
         
         # Assign averaged value to all 4 pixels
-        Cb_copy[i:i+2, j:j+2] = np.uint8(avg_cb)
-        Cr_copy[i:i+2, j:j+2] = np.uint8(avg_cr)
+        Cb_subsampled[i:i+2, j:j+2] = np.uint8(avg_cb)
+        Cr_subsampled[i:i+2, j:j+2] = np.uint8(avg_cr)
 
 # Handle edge pixels if dimensions were odd
 if h % 2 != 0:
-    Cb_copy[-1, :] = Cb[-1, :]
-    Cr_copy[-1, :] = Cr[-1, :]
+    Cb_subsampled[-1, :] = Cb[-1, :]
+    Cr_subsampled[-1, :] = Cr[-1, :]
 if w % 2 != 0:
-    Cb_copy[:, -1] = Cb[:, -1]
-    Cr_copy[:, -1] = Cr[:, -1]
+    Cb_subsampled[:, -1] = Cb[:, -1]
+    Cr_subsampled[:, -1] = Cr[:, -1]
 
 
 
@@ -144,9 +144,6 @@ quantized_blocks_R = []
 for dct_block in dct_blocks_R:
     quantized_block = np.round(dct_block / Q_Chrominance)
     quantized_blocks_R.append(quantized_block)
-
-
-
 
 
 
@@ -298,9 +295,7 @@ encoded_R, huffman_codes_R = huffman_encode(rle_R)
 
 
 
-# ============================================================================
 # DECOMPRESSION / DECODING PROCESS
-# ============================================================================
 
 def huffman_decode(encoded_bits, huffman_codes, num_blocks):
     """
@@ -441,9 +436,7 @@ B_reconstructed = np.clip(Y_f + 1.772 * (Cb_f - 128), 0, 255).astype(np.uint8)
 img_reconstructed = np.stack([R_reconstructed, G_reconstructed, B_reconstructed], axis=2)
 
 
-# ============================================================================
 # VISUALIZATION AND COMPARISON
-# ============================================================================
 
 # Calculate PSNR
 mse = np.mean((img.astype(np.float32) - img_reconstructed.astype(np.float32)) ** 2)
