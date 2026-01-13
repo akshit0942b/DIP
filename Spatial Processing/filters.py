@@ -7,10 +7,18 @@ matplotlib.use('macosx')
 import matplotlib.pyplot as plt
 import random
 
-img = cv2.imread("dog.jpg")
+img = cv2.imread("image.png")
 img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
 h, w, c = img.shape
+
+R = img[:, :, 0].astype(np.float32)
+G = img[:, :, 1].astype(np.float32)
+B = img[:, :, 2].astype(np.float32)
+
+# Playing with Intensity
+Y  = np.clip(0.299*R + 0.587*G + 0.114*B, 0, 255).astype(np.uint8)
+
 
 # Vectorized averaging using slicing (no loops!)
 blurr = np.zeros_like(img, dtype=np.float32)
@@ -28,28 +36,57 @@ blurr[1:h-1, 1:w-1] = (
     img[2:h, 2:w].astype(np.float32)        # bottom-right
 ) / 9.0
 
+
 blurr = blurr.astype(np.uint8)
-
+ 
 blurred = cv2.blur(img, (100,100)) # averaging a 100x100 size block -> visible blurr
-gaussianBlurr = cv2.GaussianBlur(img, (301, 301), 0)
 
-R = img[:, :, 0].astype(np.float32)
-G = img[:, :, 1].astype(np.float32)
-B = img[:, :, 2].astype(np.float32)
-
-# Playing with Intensity
-Y  = np.clip(0.299*R + 0.587*G + 0.114*B, 0, 255).astype(np.uint8)
+gaussianBlurr = cv2.GaussianBlur(Y, (7, 7), 0)
 
 
-# some random noise generation
-for _ in range(100):
-    c = random.random()
-    noisy = np.where(Y == int(c*255), 255, Y)
+# Gaussian Noise Generation
+noise = np.zeros(Y.shape, dtype=np.float32)
+cv2.randn(noise, mean=0, stddev=55)
+
+noisy = Y.astype(np.float32) + noise
+noisy = np.clip(noisy, 0 ,255).astype(np.uint8)
 
 
-noise = noisy - Y
 
-fil = cv2.medianBlur(noisy, ksize=51)
+
+# MEDIAN FILTER
+fil = cv2.medianBlur(noisy, ksize=11)
+
+diff = Y - fil
+
+# SOBEL FILTER
+kernel_x = np.array([[-1, 0, 1],
+                     [-2, 0, 2],
+                     [-1, 0, 1]], dtype=np.float32)
+
+
+kernel_y = np.array([[-1, -2, -1],
+                     [0, 0, 0],
+                     [1, 2, 1]], dtype=np.float32)
+
+
+g_x = cv2.filter2D(noisy, cv2.CV_64F, kernel_x)
+g_y = cv2.filter2D(noisy, cv2.CV_64F, kernel_y)
+
+magnitude = np.sqrt(g_x**2 + g_y**2)
+edges = np.uint8(255 * magnitude / magnitude.max())
+
+
+# LAPLACIAN FILTER
+lap = cv2.Laplacian(noisy, ddepth=cv2.CV_64F)
+lap = np.abs(lap)
+lap = np.uint8(lap)
+
+
+# Unsharp Masking
+extracted_details = Y - gaussianBlurr
+sharped = Y + extracted_details
+
 
 plt.subplot(3, 2, 1)
 plt.imshow(Y, cmap='gray')
@@ -57,19 +94,29 @@ plt.title("Original")
 plt.axis("off")
 
 plt.subplot(3, 2, 2)
-plt.imshow(noisy, cmap='gray')
-plt.title("Noisy")
+plt.imshow(sharped, cmap='gray')
+plt.title("sharped")
 plt.axis("off")
 
 plt.subplot(3, 2, 3)
-plt.imshow(noise, cmap='gray')
-plt.title("Added noise")
+plt.imshow(gaussianBlurr, cmap='gray')
+plt.title("blurred")
 plt.axis("off")
 
-plt.subplot(3, 2, 4)
-plt.imshow(fil, cmap='gray')
-plt.title("median filter")
-plt.axis("off")
+# plt.subplot(3, 2, 4)
+# plt.imshow(diff, cmap='gray')
+# plt.title("difference")
+# plt.axis("off")
+
+# plt.subplot(3, 2, 3)
+# plt.imshow(edges, cmap='gray')
+# plt.title("sobel filter (edges)")
+# plt.axis("off")
+
+# plt.subplot(3, 2, 4)
+# plt.imshow(lap, cmap='gray')
+# plt.title("laplacian (edges)")
+# plt.axis("off")
 
 
 plt.show()

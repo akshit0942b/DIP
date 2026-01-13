@@ -49,7 +49,7 @@ gamma = 1 * (Y**0.0001)
 # claheCdf = claheHist.cumsum()
 # claheCdfNorm = claheCdf * float(claheHist.max()) / claheCdf.max()
 
-
+  
 # plt.subplot(3, 2, 1)
 # plt.imshow(Y, cmap='gray')
 # plt.ylabel("Original")
