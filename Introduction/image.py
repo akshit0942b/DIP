@@ -142,7 +142,7 @@ plt.axis("off")
 
 
 
-#replacing every pixel by the average of their 3x3 neighborhood
+# Replacing every pixel by the average of their 3x3 neighborhood
 float_image = img.astype(np.float32)
 new_image = float_image.copy();
 for i in range(1, 3436):
