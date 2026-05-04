@@ -7,7 +7,7 @@ matplotlib.use('macosx')
 import matplotlib.pyplot as plt
 import random
 
-img = cv2.imread("image.png")
+img = cv2.imread("images/flower.avif")
 img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
 h, w, c = img.shape
@@ -41,7 +41,7 @@ blurr = blurr.astype(np.uint8)
  
 blurred = cv2.blur(img, (100,100)) # averaging a 100x100 size block -> visible blurr
 
-gaussianBlurr = cv2.GaussianBlur(Y, (7, 7), 0)
+gaussianBlurr = cv2.GaussianBlur(Y, (91, 91), 0)
 
 
 # Gaussian Noise Generation
@@ -88,25 +88,28 @@ extracted_details = Y - gaussianBlurr
 sharped = Y + extracted_details
 
 
-plt.subplot(3, 2, 1)
-plt.imshow(Y, cmap='gray')
+# Bilateral Filter
+bilateral = cv2.bilateralFilter(img, 131, 60, 90)
+
+plt.subplot(2, 2, 1)
+plt.imshow(img)
 plt.title("Original")
 plt.axis("off")
 
-plt.subplot(3, 2, 2)
-plt.imshow(sharped, cmap='gray')
-plt.title("sharped")
-plt.axis("off")
-
-plt.subplot(3, 2, 3)
-plt.imshow(gaussianBlurr, cmap='gray')
-plt.title("blurred")
-plt.axis("off")
-
-# plt.subplot(3, 2, 4)
-# plt.imshow(diff, cmap='gray')
-# plt.title("difference")
+# plt.subplot(3, 2, 2)
+# plt.imshow(sharped, cmap='gray')
+# plt.title("sharped")
 # plt.axis("off")
+
+plt.subplot(2, 2, 2)
+plt.imshow(gaussianBlurr)
+plt.title("gaussian blurr")
+plt.axis("off")
+
+plt.subplot(2, 2, 3)
+plt.imshow(bilateral)
+plt.title("Bilateral Filter")
+plt.axis("off")
 
 # plt.subplot(3, 2, 3)
 # plt.imshow(edges, cmap='gray')
